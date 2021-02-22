@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ESP Compass</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" type="text/css" href="css/style.css">
+  <script src="/js/script.js"></script>
+</head>
+<body>
+  <h1>ESP Compass</h1>
+  <div
+    style="width:237px;height:237px;display:block;margin-left:auto;margin-right:auto;margin-top:10px;overflow: hidden">
+    <div id="compass_spin"
+      style="text-align: start; margin-left: -50px;margin-top: -50px;width: 337px;height: 337px;display: block;transform-origin: 50% 50%;transform: rotate(0deg);transition: 0.4s linear;visibility: hidden;">
+      <img src="/img/compass.png" height="237" width="237" alt="compass" style="margin-left:50px;margin-top:50px;" />
+    </div>
+  </div>
+  <span id="compass_val">%compass%</span>
+  <sup class="units">&deg;</sup>
+</body>
+</html>

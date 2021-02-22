@@ -22,9 +22,10 @@ Simple compass displayed in web browser.
 2. Install PlatformIO  
    <https://platformio.org/install/ide?install=vscode>
 3. Load solution in VSCode
-   1. Adjust Wi-Fi settings in `/src/wifi.cpp`
-   2. `Upload` solution to ESP
-   3. `Upload  Filesystem Image` to ESP
+   1. Ensure git submodules are updated
+   2. Adjust Wi-Fi settings in `/src/wifi.cpp`
+   3. `Upload` solution to ESP
+   4. `Upload  Filesystem Image` to ESP
 
 
 Two Wi-Fi operation mode are possible:

@@ -11,7 +11,7 @@ setInterval(function () {
     };
     xhttp.open("GET", "/compass", true);
     xhttp.send();
-}, 500);
+}, 250);
 
 var fieldH = "data-heading";
 var fieldB = "data-bearing";

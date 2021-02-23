@@ -23,7 +23,14 @@ void http_init()
     server.serveStatic("/js/", SPIFFS, "/js/");
 
     server.on("/compass", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send(200, "text/plain", String(sensor_readDegress()));
+        if (sensor_ready())
+        {
+            request->send(200, "text/plain", String(sensor_readDegress()));
+        }
+        else
+        {
+            request->send(500, "text/plain", String());
+        }
     });
 
     server.onNotFound(notFound);

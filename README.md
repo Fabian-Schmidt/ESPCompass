@@ -37,3 +37,7 @@ Two Wi-Fi operation mode are possible:
 2. ESP is Wi-Fi client.
    - Check your router for IP of ESP.
 
+Sensor needs calibration. To calibrate slowly turn sensor while web page is open.
+Calibration is automatically stored in device.
+To delete calibration use `Earase Flash` in PlatformIO.
+An upload will not overwrite the calibration data.

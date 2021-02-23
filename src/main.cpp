@@ -18,4 +18,6 @@ void setup()
 void loop()
 {
   wifi_loop();
+  // sensor_printPlotter();
+  // delay(100);
 }

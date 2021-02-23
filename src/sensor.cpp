@@ -1,6 +1,11 @@
 #include <DFRobot_QMC5883.h>
+#include <EEPROM.h>
 
 DFRobot_QMC5883 compass;
+// used to detect of eeprom is valid.
+uint8_t structMagicKey = 0xAB;
+void storeStruct(void *data_source, size_t size);
+bool loadStruct(void *data_dest, size_t size);
 
 void sensor_init(float declinationAngle)
 {
@@ -53,8 +58,8 @@ void sensor_init(float declinationAngle)
     Serial.println("Initialize QMC5883");
     compass.setRange(QMC5883_RANGE_8GA);
     compass.setMeasurementMode(QMC5883_CONTINOUS);
-    compass.setDataRate(QMC5883_DATARATE_10HZ);
-    compass.setSamples(QMC5883_SAMPLES_8);
+    compass.setDataRate(QMC5883_DATARATE_50HZ);
+    compass.setSamples(QMC5883_OVERSAMPLERATIO_512);
   }
   else if (compass.isVCM())
   {
@@ -62,12 +67,29 @@ void sensor_init(float declinationAngle)
     //compass.setMeasurementMode(VCM5883L_CONTINOUS);
     //compass.setDataRate(VCM5883L_DATARATE_200HZ);
   }
-  compass.setDeclinationAngle(declinationAngle);
+
+  if (declinationAngle != 0)
+  {
+    Serial.print("DeclinationAngle: ");
+    Serial.println(declinationAngle);
+    compass.setDeclinationAngle(declinationAngle);
+  }
+
+  Calibration cal;
+  if (loadStruct(&cal, sizeof(cal)))
+  {
+    Serial.println("Loaded calibration data");
+    compass.setCalibration(cal);
+  }
+  else
+  {
+    Serial.println("No calibration data found");
+  }
 }
 
 void sensor_checkSettings()
 {
-  Serial.print("Selected mode: ");
+  Serial.print("Selected sensor: ");
   if (compass.isHMC())
   {
     Serial.println("HMC5883");
@@ -162,8 +184,8 @@ void sensor_checkSettings()
   {
     switch (compass.getMeasurementMode())
     {
-    case QMC5883_SINGLE:
-      Serial.println("Single-Measurement");
+    case QMC5883_STANDBY:
+      Serial.println("Standby");
       break;
     case QMC5883_CONTINOUS:
       Serial.println("Continuous-Measurement");
@@ -244,7 +266,7 @@ void sensor_checkSettings()
     }
   }
 
-  if (compass.isHMC() || compass.isQMC())
+  if (compass.isHMC())
   {
     Serial.print("Selected number of samples: ");
     switch (compass.getSamples())
@@ -265,19 +287,119 @@ void sensor_checkSettings()
       Serial.println("Bad number of samples!");
     }
   }
+  else if (compass.isQMC())
+  {
+
+    Serial.print("Selected Over Sample Ratio: ");
+    switch (compass.getSamples())
+    {
+    case QMC5883_OVERSAMPLERATIO_512:
+      Serial.println("512");
+      break;
+    case QMC5883_OVERSAMPLERATIO_256:
+      Serial.println("256");
+      break;
+    case QMC5883_OVERSAMPLERATIO_128:
+      Serial.println("128");
+      break;
+    case QMC5883_OVERSAMPLERATIO_64:
+      Serial.println("64");
+      break;
+    default:
+      Serial.println("Bad number of samples!");
+    }
+  }
 }
 
-void sensor_printDegress()
+bool sensor_ready()
 {
-  Vector mag = compass.readRaw();
-  compass.getHeadingDegrees();
-  Serial.print("Degress = ");
-  Serial.println(mag.HeadingDegress, 0);
+  return compass.isDataReady();
 }
+
+int counter = 0;
 
 float sensor_readDegress()
 {
-  Vector mag = compass.readRaw();
-  compass.getHeadingDegrees();
-  return mag.HeadingDegress;
+  counter++;
+  if (counter > 250)
+  {
+    // every 250 sensor readings check for new calibration.
+    // webpage is updated every 1/4 second = one calibration check per minute.
+    counter = 0;
+    if (compass.hasNewCalibration())
+    {
+      Calibration cal = compass.readCalibration();
+      storeStruct(&cal, sizeof(cal));
+    }
+  }
+
+  return compass.readHeadingDegrees();
+}
+
+void sensor_printPlotter()
+{
+  if (compass.isDataReady())
+  {
+    // Vector raw = compass.readRaw();
+    // Serial.print("xRaw:");
+    // Serial.print(raw.XAxis);
+    // Serial.print(" yRaw:");
+    // Serial.print(raw.YAxis);
+    // Serial.print(" ");
+
+    VectorScaled s = compass.readScaled();
+    Serial.print("x:");
+    Serial.print(s.XAxis);
+    Serial.print(" y:");
+    Serial.print(s.YAxis);
+    Serial.print(" ");
+
+    // VectorScaled cal = compass.readCalibration();
+    // Serial.print("calibrationx:");
+    // Serial.print(cal.XAxis);
+    // Serial.print(" calibrationy:");
+    // Serial.print(cal.YAxis);
+    // Serial.print(" ");
+
+    float com = sensor_readDegress();
+    Serial.print("compass:");
+    Serial.print(com);
+    Serial.print(" ");
+
+    Serial.println();
+  }
+  else
+  {
+    Serial.println();
+  }
+}
+
+void storeStruct(void *data_source, size_t size)
+{
+  EEPROM.begin(size * 2 + 1);
+  EEPROM.write(0, structMagicKey);
+  for (size_t i = 1; i < size; i++)
+  {
+    char data = ((char *)data_source)[i];
+    EEPROM.write(i, data);
+  }
+  EEPROM.commit();
+}
+
+bool loadStruct(void *data_dest, size_t size)
+{
+  EEPROM.begin(size * 2 + 1);
+  if (EEPROM.read(0) == structMagicKey)
+  {
+    for (size_t i = 1; i < size; i++)
+    {
+      char data = EEPROM.read(i);
+      ((char *)data_dest)[i] = data;
+    }
+    return true;
+  }
+  else
+  {
+    return false;
+  }
 }

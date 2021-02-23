@@ -3,4 +3,4 @@
 	url = https://github.com/roman-minyaylov/fritzing-parts.git
 [submodule "lib/DFRobot_QMC5883"]
 	path = lib/DFRobot_QMC5883
-	url = https://github.com/DFRobot/DFRobot_QMC5883.git
+	url = https://github.com/Fabian-Schmidt/DFRobot_QMC5883.git
